@@ -8,10 +8,11 @@ import { createProblem, type Problem } from '@/lib/errors';
 import { fetchJsonResource } from '@/lib/http/json';
 import { downloadHostsFor } from '@/lib/http/url';
 import { encorePackageId } from '@/modules/quest/contract';
-import { encoreReleasesUrl } from '@/modules/updates/contract';
 
 const maxApkBytes = 512 * 1024 * 1024;
 const maxManifestBytes = 4 * 1024 * 1024;
+// the headset runs the stock Encore companion, so it comes from upstream releases
+const companionReleasesUrl = 'https://github.com/ScoreSaber/encore/releases';
 const latestReleaseUrl = 'https://api.github.com/repos/ScoreSaber/encore/releases/latest';
 const releaseSchema = z.object({
    tag_name: z.string().regex(/^v\d+\.\d+\.\d+$/),
@@ -31,7 +32,7 @@ export async function downloadCompanionApk(path: string): Promise<Result<void, P
    if (!asset.digest) return Result.err(createProblem('quest.apk.integrity-failed'));
 
    const downloaded = await downloadContent({
-      url: `${encoreReleasesUrl}/download/${tag}/${name}`,
+      url: `${companionReleasesUrl}/download/${tag}/${name}`,
       destinationPath: path,
       limits: { maxDownloadBytes: maxApkBytes },
       policy: { allowedHosts: downloadHostsFor('github.com') }

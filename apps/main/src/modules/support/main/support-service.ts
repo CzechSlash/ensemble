@@ -109,7 +109,7 @@ export function createSupportService(options: {
 
 function describeApp(generatedAt: string, info: AppInfo) {
    return [
-      '# Encore diagnostics',
+      '# Ensemble diagnostics',
       `generated: ${generatedAt}`,
       `app: ${info.name} ${info.version} (${info.release.label})`,
       `platform: ${info.platform} ${info.arch}`,

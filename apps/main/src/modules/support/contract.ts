@@ -28,9 +28,9 @@ export const quickLinkSections: { id: QuickLinkSectionId; links: readonly QuickL
 
 export const supportLinkUrls = {
    'support-encore': 'https://github.com/scoresaber/encore?sponsor=1',
-   'give-feedback': 'https://hub.scoresaber.com/',
-   'source-code': 'https://github.com/scoresaber/encore',
-   'report-issue': 'https://github.com/scoresaber/encore/issues/new',
+   'give-feedback': 'https://github.com/CzechSlash/ensemble/discussions',
+   'source-code': 'https://github.com/CzechSlash/ensemble',
+   'report-issue': 'https://github.com/CzechSlash/ensemble/issues/new',
    'bsmg-discord': 'https://discord.gg/beatsabermods',
    'scoresaber-discord': 'https://discord.scoresaber.com/',
    beatmods: 'https://beatmods.com/',

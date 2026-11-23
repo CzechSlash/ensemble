@@ -212,7 +212,13 @@ export function parseModRepositoryLink(value: string): ModRepositoryLinkEvent {
 
    const link = new URL(value);
    const url = link.searchParams.get('url');
-   if (link.protocol !== `${encoreProtocol}:` || link.host !== modRepositoryLinkAction || (link.pathname !== '' && link.pathname !== '/') || !url) {
+   // stock Encore links still work, since repository pages publish encore:// links
+   if (
+      ![`${encoreProtocol}:`, 'encore:'].includes(link.protocol) ||
+      link.host !== modRepositoryLinkAction ||
+      (link.pathname !== '' && link.pathname !== '/') ||
+      !url
+   ) {
       return { status: 'rejected', issue: 'invalid-url' };
    }
 

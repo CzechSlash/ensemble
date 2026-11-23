@@ -13,6 +13,8 @@ import { runsOnSteamFrame } from '@/modules/targets/contract';
 import { useTargets } from '@/modules/targets/renderer/use-targets';
 import { UpdateVersionRow } from '@/modules/updates/renderer/update-controls';
 
+const upstreamRepositoryUrl = 'https://github.com/ScoreSaber/encore';
+
 export const Route = createFileRoute('/settings/general')({
    component: GeneralSettings
 });
@@ -30,6 +32,20 @@ function GeneralSettings() {
          {desktop ? (
             <SettingsSection title={t('about.title')}>
                <UpdateVersionRow />
+               <SettingsRow
+                  title={t('about.fork.title')}
+                  description={t('about.fork.description')}
+                  control={
+                     <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => void window.encore.app.openLink({ url: upstreamRepositoryUrl })}
+                     >
+                        {t('about.fork.open')}
+                     </Button>
+                  }
+               />
             </SettingsSection>
          ) : null}
 

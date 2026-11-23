@@ -1,11 +1,11 @@
 {
-   "name": "encore",
+   "name": "ensemble",
    "version": "0.2.2",
    "private": true,
-   "description": "A lightweight desktop companion for managing Beat Saber installs, mods and other user generated content",
-   "homepage": "https://encore.scoresaber.com",
+   "description": "A fleet and event companion for Beat Saber, compatible with ScoreSaber Encore",
+   "homepage": "https://github.com/CzechSlash/ensemble",
    "license": "GPL-3.0-only",
-   "author": "ScoreSaber",
+   "author": "CzechSlash",
    "type": "module",
    "main": "out/main/index.js",
    "scripts": {
@@ -75,8 +75,8 @@
       "vite-plus": "catalog:"
    },
    "build": {
-      "appId": "com.scoresaber.encore",
-      "productName": "Encore",
+      "appId": "com.czechslash.ensemble",
+      "productName": "Ensemble",
       "directories": {
          "buildResources": "../../assets",
          "output": "release"
@@ -102,15 +102,15 @@
       "publish": [
          {
             "provider": "github",
-            "owner": "ScoreSaber",
-            "repo": "encore"
+            "owner": "CzechSlash",
+            "repo": "ensemble"
          }
       ],
       "protocols": [
          {
-            "name": "Encore launch link",
+            "name": "Ensemble launch link",
             "schemes": [
-               "encore"
+               "ensemble"
             ],
             "role": "Viewer"
          }
@@ -123,8 +123,8 @@
          "category": "public.app-category.utilities",
          "darkModeSupport": true,
          "extendInfo": {
-            "NSBluetoothAlwaysUsageDescription": "Encore uses Bluetooth to set up your Quest without a cable",
-            "NSLocalNetworkUsageDescription": "Encore connects to your Quest over Wi-Fi",
+            "NSBluetoothAlwaysUsageDescription": "Ensemble uses Bluetooth to set up your Quest without a cable",
+            "NSLocalNetworkUsageDescription": "Ensemble connects to your Quest over Wi-Fi",
             "NSBonjourServices": [
                "_adb-tls-connect._tcp",
                "_adb-tls-pairing._tcp"
@@ -161,10 +161,10 @@
             "rpm",
             "flatpak"
          ],
-         "executableName": "encore",
+         "executableName": "ensemble",
          "category": "Utility",
-         "maintainer": "ScoreSaber <contact@scoresaber.com>",
-         "vendor": "ScoreSaber",
+         "maintainer": "CzechSlash",
+         "vendor": "CzechSlash",
          "syncDesktopName": true,
          "extraResources": [
             {
@@ -174,7 +174,7 @@
          ],
          "desktop": {
             "entry": {
-               "StartupWMClass": "encore",
+               "StartupWMClass": "ensemble",
                "Keywords": "beat saber;mods;maps;playlists;"
             }
          }
@@ -183,12 +183,12 @@
          "artifactName": "${productName}-${version}-linux-x86_64.${ext}"
       },
       "deb": {
-         "packageName": "encore",
+         "packageName": "ensemble",
          "compression": "gz",
          "artifactName": "${productName}-${version}-linux-amd64.${ext}"
       },
       "rpm": {
-         "packageName": "encore",
+         "packageName": "ensemble",
          "compression": "gzip",
          "artifactName": "${productName}-${version}-linux-x86_64.${ext}"
       },
@@ -212,5 +212,5 @@
          ]
       }
    },
-   "desktopName": "com.scoresaber.encore"
+   "desktopName": "com.czechslash.ensemble"
 }

@@ -111,7 +111,7 @@ function createMainWindow(log: AppLogWriter, options: { hidden: boolean } = { hi
       minWidth: 980,
       minHeight: 660,
       show: false,
-      title: 'Encore',
+      title: 'Ensemble',
       backgroundColor: '#09090b',
       autoHideMenuBar: true,
       titleBarStyle: process.platform === 'darwin' ? 'hiddenInset' : nativeChrome ? 'default' : 'hidden',

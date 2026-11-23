@@ -54,7 +54,7 @@ export function createLoginItem(options: { platform: NodeJS.Platform; packaged: 
          [
             '[Desktop Entry]',
             'Type=Application',
-            'Name=Encore',
+            'Name=Ensemble',
             `Exec=${options.command} ${backgroundLaunchFlag}`,
             'X-GNOME-Autostart-enabled=true',
             ''

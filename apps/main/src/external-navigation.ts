@@ -21,5 +21,7 @@ function isAllowedDestination(url: URL) {
    if (hostname === 'scoresaber.com' || hostname.endsWith('.scoresaber.com')) return true;
 
    const pathname = url.pathname.toLowerCase();
-   return hostname === 'github.com' && (pathname === '/scoresaber/encore' || pathname.startsWith('/scoresaber/encore/'));
+   return (
+      hostname === 'github.com' && ['/scoresaber/encore', '/czechslash/ensemble'].some((repo) => pathname === repo || pathname.startsWith(`${repo}/`))
+   );
 }

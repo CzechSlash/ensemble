@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-export const encoreReleasesUrl = 'https://github.com/ScoreSaber/encore/releases';
+export const encoreReleasesUrl = 'https://github.com/CzechSlash/ensemble/releases';
 
 export const updateStateSchema = z.object({
    status: z.enum(['disabled', 'idle', 'checking', 'up-to-date', 'available', 'downloading', 'downloaded', 'error']),

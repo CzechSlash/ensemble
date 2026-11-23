@@ -120,7 +120,7 @@ export default {
    run: {
       tasks: {
          dev: {
-            command: 'pnpm --filter encore dev',
+            command: 'pnpm --filter ensemble dev',
             cache: false
          },
          'dev:web': {
@@ -128,11 +128,11 @@ export default {
             cache: false
          },
          'dev:all': {
-            command: 'pnpm --parallel --filter encore --filter @encore/web run dev',
+            command: 'pnpm --parallel --filter ensemble --filter @encore/web run dev',
             cache: false
          },
          build: {
-            command: 'pnpm --filter encore build',
+            command: 'pnpm --filter ensemble build',
             env: ['VITE_POSTHOG_HOST', 'VITE_POSTHOG_PROJECT_TOKEN']
          },
          'build:web': 'pnpm --filter @encore/web build',
@@ -141,9 +141,9 @@ export default {
          'build:all': {
             command: ['vp run build', 'vp run build:web']
          },
-         'build:watchdog': 'pnpm --filter encore build:watchdog',
+         'build:watchdog': 'pnpm --filter ensemble build:watchdog',
          start: {
-            command: 'pnpm --filter encore start',
+            command: 'pnpm --filter ensemble start',
             cache: false
          },
          'start:web': {
@@ -151,15 +151,15 @@ export default {
             cache: false
          },
          'electron:install': {
-            command: 'pnpm --filter encore electron:install',
+            command: 'pnpm --filter ensemble electron:install',
             cache: false
          },
          package: {
-            command: 'pnpm --filter encore package',
+            command: 'pnpm --filter ensemble package',
             cache: false
          },
          'package:dir': {
-            command: 'pnpm --filter encore package:dir',
+            command: 'pnpm --filter ensemble package:dir',
             cache: false
          },
          'deploy:web': {

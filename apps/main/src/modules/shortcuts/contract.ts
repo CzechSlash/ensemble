@@ -5,7 +5,7 @@ import type { InstallId } from '@/modules/installs/contract';
 import { launchArgsSchema, launchFlagSchema, launchFlags, launchPlatformSchema, type LaunchOptions } from '@/modules/launch/contract';
 import { localTargetId, type TargetId } from '@/modules/targets/contract';
 
-export const encoreProtocol = 'encore';
+export const encoreProtocol = 'ensemble';
 const launchLinkAction = 'launch';
 const launchLinkPrefix = `${encoreProtocol}://`;
 

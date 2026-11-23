@@ -515,7 +515,7 @@ function composeEncore(log: AppLogWriter) {
 }
 
 function startEncore() {
-   electronApp.setAppUserModelId('com.scoresaber.encore');
+   electronApp.setAppUserModelId('com.czechslash.ensemble');
    setProtocolRegistered(encoreProtocol, true);
    const log = createAppLogWriter({ logsPath: app.getPath('logs'), homePath: app.getPath('home') });
    composeEncore(log);

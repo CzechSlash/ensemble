@@ -1,3 +1,0 @@
-#!/bin/sh
-files="$(sed -n 's/^app-path=//p' /.flatpak-info)"
-exec flatpak-spawn --host sh "$files/share/encore/install.sh" "$files/share/encore"

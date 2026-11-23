@@ -45,7 +45,7 @@ test('adds a Steam shortcut without touching the entries Steam already had', asy
    const entries = vdfMap(parseBinaryVdf(await readFile(join(configPath, 'shortcuts.vdf'))).get('shortcuts'));
    expect(entries?.size).toBe(2);
    expect(vdfMap(entries?.get('0'))).toEqual(other);
-   expect(vdfText(vdfMap(entries?.get('1'))?.get('LaunchOptions'))).toContain('encore://launch?target=local&install=install_abcdef012345');
+   expect(vdfText(vdfMap(entries?.get('1'))?.get('LaunchOptions'))).toContain('ensemble://launch?target=local&install=install_abcdef012345');
 });
 
 test('writes a desktop entry Exec line that survives percent-encoded args and reserved characters', async () => {
@@ -75,6 +75,6 @@ test('writes a desktop entry Exec line that survives percent-encoded args and re
 
    const entry = await readFile(join(root, 'Desktop', 'Beat Saber.desktop'), 'utf8');
    expect(entry).toContain(
-      'Exec="/opt/My \\\\"\\\\$Apps\\\\"/Encore.AppImage" "encore://launch?target=local&install=install_abcdef012345&arg=100%%25&arg=C%%3A%%5Cx"\n'
+      'Exec="/opt/My \\\\"\\\\$Apps\\\\"/Encore.AppImage" "ensemble://launch?target=local&install=install_abcdef012345&arg=100%%25&arg=C%%3A%%5Cx"\n'
    );
 });

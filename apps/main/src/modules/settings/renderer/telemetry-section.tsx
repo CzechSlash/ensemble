@@ -5,7 +5,7 @@ import { Switch } from '@/components/ui/switch';
 import { SettingsRow, SettingsSection } from '@/modules/settings/renderer/settings-layout';
 import { useSettings } from '@/modules/settings/renderer/use-settings';
 
-const privacyPolicyUrl = 'https://encore.scoresaber.com/privacy';
+const privacyPolicyUrl = 'https://github.com/CzechSlash/ensemble/blob/main/PRIVACY.md';
 
 export function TelemetrySection({ disabled }: { disabled: boolean }) {
    const t = useTranslations('settings.telemetry');
