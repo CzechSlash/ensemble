@@ -5,7 +5,7 @@ import { waitFor } from '@/modules/operations/main/operation-waiting.fixture';
 import { createQuestHeadsets } from '@/modules/quest/main/quest-headsets';
 import type { Target, TargetEvent } from '@/modules/targets/contract';
 
-import { mkdtemp, readFile, rm } from 'node:fs/promises';
+import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -78,6 +78,48 @@ test('one entry per headset, routed remote then USB then Wi-Fi, remembered offli
    local.set([], { type: 'target-removed', targetId: 'quest:SERIAL' });
    local.set([usb], { type: 'target-updated', target: usb });
    expect(headsets.listTargets()).toEqual([expect.objectContaining({ id: 'quest:SERIAL', connection: 'usb' })]);
+   headsets.dispose();
+   await rm(dataPath, { recursive: true, force: true, maxRetries: 5 });
+});
+
+test('retries a few offline headsets at a time and backs off the ones that stay offline', async () => {
+   const dataPath = await mkdtemp(join(tmpdir(), 'encore-headsets-'));
+   const known = Array.from({ length: 100 }, (_, index) => ({
+      targetId: `quest:SERIAL${index}`,
+      name: 'Quest 3',
+      connection: 'wifi' as const,
+      endpoint: `10.0.0.${index}:5555`
+   }));
+   await writeFile(join(dataPath, 'quest-headsets.json'), JSON.stringify({ known, forgotten: [] }));
+   let active = 0;
+   let peak = 0;
+   const attempted: string[] = [];
+   const headsets = createQuestHeadsets({
+      dataPath,
+      local: source([]),
+      remote: source([]),
+      reconnect: async (endpoint) => {
+         attempted.push(endpoint);
+         active += 1;
+         peak = Math.max(peak, active);
+         await new Promise((resolve) => setTimeout(resolve, 2));
+         active -= 1;
+      },
+      disableWireless: async () => Result.ok()
+   });
+   await headsets.knowsLocalHeadset();
+
+   await headsets.retry();
+   expect(attempted).toHaveLength(32);
+   expect(peak).toBeLessThanOrEqual(8);
+   expect(attempted[0]).toBe('10.0.0.99:5555');
+
+   await headsets.retry();
+   expect(new Set(attempted).size).toBe(64);
+
+   attempted.length = 0;
+   await headsets.retry(true);
+   expect(attempted).toHaveLength(100);
    headsets.dispose();
    await rm(dataPath, { recursive: true, force: true, maxRetries: 5 });
 });

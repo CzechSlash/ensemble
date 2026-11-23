@@ -2,6 +2,7 @@ import { Result } from 'better-result';
 
 import { createAdbClient, type AdbClient, type AdbDevice, type AdbDeviceState } from '@/lib/android/adb';
 import type { AdbProvisioner } from '@/lib/android/adb-provisioner';
+import { mapWithConcurrency } from '@/lib/async';
 import { createProblem, type Problem } from '@/lib/errors';
 import { removeQuietly } from '@/lib/filesystem/path';
 import { translate } from '@/lib/messages';
@@ -34,6 +35,8 @@ import { join } from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
 
 const pollIntervalMs = 10_000;
+const fullProbeIntervalMs = 60_000;
+const maxConcurrentProbes = 8;
 const maxFailedPolls = 3;
 const questProducts = new Set(['monterey', 'hollywood', 'seacliff', 'eureka', 'panther']);
 const adbServerCantConnect = /unable to start pairing client|failed to connect|unable to connect|connection refused|no route to host|timed out/i;
@@ -76,6 +79,8 @@ export function createQuestDeviceService(options: {
    const listeners = new Set<(event: TargetEvent) => void>();
    const devices = new Map<string, QuestDeviceSnapshot>();
    const identitiesByTransport = new Map<string, string>();
+   const identifiedTransports = new Map<string, { model: string | null; product: string | null }>();
+   const probedAt = new Map<string, number>();
 
    let lifecycle: ServiceLifecycle = 'stopped';
    const isDisposed = () => lifecycle === 'disposed';
@@ -147,80 +152,116 @@ export function createQuestDeviceService(options: {
       error = null;
       failedPolls = 0;
 
+      const present = new Set(listed.value.map((device) => device.serial));
+      for (const serial of identifiedTransports.keys()) if (!present.has(serial)) identifiedTransports.delete(serial);
+
+      const probed = await mapWithConcurrency(listed.value, maxConcurrentProbes, (device) => probeDevice(activeClient, device, force));
+      if (isDisposed()) return;
+
       const next = new Map<string, QuestDeviceSnapshot>();
-      for (const device of listed.value) {
-         if (isDisposed()) return;
-         let model = device.model?.replaceAll('_', ' ') ?? null;
-         let product = device.product;
-         if (device.state === 'device' && !isQuestDevice(device)) {
-            if (model && product) continue;
-            const identified = await Promise.all([activeClient.deviceModel(device.serial), activeClient.deviceProduct(device.serial)]);
-            model = Result.isOk(identified[0]) ? identified[0].value : model;
-            product = Result.isOk(identified[1]) ? identified[1].value : product;
-            if (!isQuestDevice({ ...device, model, product })) continue;
-         }
-
-         const hardware = device.state === 'device' ? await activeClient.hardwareSerial(device.serial) : null;
-         const physicalId =
-            hardware && Result.isOk(hardware) && hardware.value ? hardware.value : (identitiesByTransport.get(device.serial) ?? device.serial);
-         identitiesByTransport.set(device.serial, physicalId);
-         const previous = devices.get(physicalId);
-         const targetId = `${questTargetIdPrefix}${physicalId}`;
-         if (!force && previous && device.state === 'device' && options.mutations.isHeld(targetId)) {
-            const preserved: QuestDeviceSnapshot = { ...previous, serial: device.serial, state: device.state, model: model ?? previous.model };
-            const selected = next.get(physicalId);
-            if (!selected || transportPriority(preserved) > transportPriority(selected)) next.set(physicalId, preserved);
-            continue;
-         }
-
-         const snapshot: QuestDeviceSnapshot = {
-            physicalId,
-            serial: device.serial,
-            state: device.state,
-            model: model ?? previous?.model ?? null,
-            gameVersion: previous?.gameVersion ?? null,
-            modloaderInstalled: previous?.modloaderInstalled ?? false,
-            gameRunning: false,
-            recoveryAvailable: false,
-            savedPlayerData: previous?.savedPlayerData ?? false,
-            companionInstalled: previous?.companionInstalled ?? false,
-            firstSeenAt: previous?.firstSeenAt ?? new Date().toISOString()
-         };
-
-         if (device.state === 'device') {
-            const [gameVersion, modloader, patched, gameRunning, backup, savedPlayerData, companion] = await Promise.all([
-               activeClient.packageVersionName(device.serial, beatSaberPackageId),
-               activeClient.fileExists(device.serial, questScotland2Path),
-               activeClient.packagePatched(device.serial, beatSaberPackageId),
-               activeClient.packageRunning(device.serial, beatSaberPackageId),
-               readBackupState({ client: activeClient, serial: device.serial }),
-               activeClient.fileExists(device.serial, questSavedPlayerDataPath),
-               activeClient.packageVersionName(device.serial, encorePackageId)
-            ]);
-
-            if (Result.isOk(gameVersion)) snapshot.gameVersion = gameVersion.value;
-            if (Result.isOk(modloader) && Result.isOk(patched)) snapshot.modloaderInstalled = modloader.value && patched.value;
-            snapshot.gameRunning = Result.isOk(gameRunning) ? gameRunning.value : (previous?.gameRunning ?? false);
-            if (Result.isOk(savedPlayerData)) snapshot.savedPlayerData = savedPlayerData.value;
-            if (Result.isOk(companion)) snapshot.companionInstalled = companion.value !== null;
-            if (Result.isError(backup)) snapshot.recoveryAvailable = previous?.recoveryAvailable ?? false;
-            else if (backup.value.complete && backup.value.apk && !snapshot.modloaderInstalled) {
-               if (snapshot.gameVersion) {
-                  snapshot.recoveryAvailable =
-                     backup.value.version === snapshot.gameVersion || backup.value.downgradeVersion === snapshot.gameVersion;
-               } else {
-                  const installed = await activeClient.packageApkPath(device.serial, beatSaberPackageId);
-                  snapshot.recoveryAvailable = Result.isOk(installed) && !installed.value;
-               }
-            }
-         }
-
-         const selected = next.get(physicalId);
-         if (!selected || transportPriority(snapshot) > transportPriority(selected)) next.set(physicalId, snapshot);
+      for (const snapshot of probed) {
+         if (!snapshot) continue;
+         const selected = next.get(snapshot.physicalId);
+         if (!selected || transportPriority(snapshot) > transportPriority(selected)) next.set(snapshot.physicalId, snapshot);
       }
 
-      if (isDisposed()) return;
       replaceDevices([...next.values()]);
+   }
+
+   // a headset's game version, modloader and saved data rarely change, so most polls only ask whether the game runs
+   async function probeDevice(client: AdbClient, device: AdbDevice, force: boolean): Promise<QuestDeviceSnapshot | null> {
+      if (isDisposed()) return null;
+      let model = device.model?.replaceAll('_', ' ') ?? null;
+      let product = device.product;
+      if (device.state === 'device' && !isQuestDevice(device)) {
+         if (model && product) return null;
+         let identified = identifiedTransports.get(device.serial);
+         if (!identified) {
+            const [foundModel, foundProduct] = await Promise.all([client.deviceModel(device.serial), client.deviceProduct(device.serial)]);
+            identified = {
+               model: Result.isOk(foundModel) ? foundModel.value : model,
+               product: Result.isOk(foundProduct) ? foundProduct.value : product
+            };
+            if (Result.isOk(foundModel) && Result.isOk(foundProduct)) identifiedTransports.set(device.serial, identified);
+         }
+         model = identified.model;
+         product = identified.product;
+         if (!isQuestDevice({ ...device, model, product })) return null;
+      }
+
+      const knownId = identitiesByTransport.get(device.serial);
+      const known = knownId ? devices.get(knownId) : undefined;
+      if (
+         known &&
+         !force &&
+         device.state === 'device' &&
+         known.state === 'device' &&
+         known.serial === device.serial &&
+         Date.now() - (probedAt.get(known.physicalId) ?? 0) < fullProbeIntervalMs
+      ) {
+         const held = options.mutations.isHeld(`${questTargetIdPrefix}${known.physicalId}`);
+         const running = held ? null : await client.packageRunning(device.serial, beatSaberPackageId);
+         if (isDisposed()) return null;
+         return {
+            ...known,
+            model: model ?? known.model,
+            gameRunning: running && Result.isOk(running) ? running.value : known.gameRunning
+         };
+      }
+
+      const hardware = device.state === 'device' ? await client.hardwareSerial(device.serial) : null;
+      const physicalId =
+         hardware && Result.isOk(hardware) && hardware.value ? hardware.value : (identitiesByTransport.get(device.serial) ?? device.serial);
+      identitiesByTransport.set(device.serial, physicalId);
+      const previous = devices.get(physicalId);
+      const targetId = `${questTargetIdPrefix}${physicalId}`;
+      if (!force && previous && device.state === 'device' && options.mutations.isHeld(targetId)) {
+         return { ...previous, serial: device.serial, state: device.state, model: model ?? previous.model };
+      }
+
+      const snapshot: QuestDeviceSnapshot = {
+         physicalId,
+         serial: device.serial,
+         state: device.state,
+         model: model ?? previous?.model ?? null,
+         gameVersion: previous?.gameVersion ?? null,
+         modloaderInstalled: previous?.modloaderInstalled ?? false,
+         gameRunning: false,
+         recoveryAvailable: false,
+         savedPlayerData: previous?.savedPlayerData ?? false,
+         companionInstalled: previous?.companionInstalled ?? false,
+         firstSeenAt: previous?.firstSeenAt ?? new Date().toISOString()
+      };
+
+      if (device.state === 'device') {
+         const [gameVersion, modloader, patched, gameRunning, backup, savedPlayerData, companion] = await Promise.all([
+            client.packageVersionName(device.serial, beatSaberPackageId),
+            client.fileExists(device.serial, questScotland2Path),
+            client.packagePatched(device.serial, beatSaberPackageId),
+            client.packageRunning(device.serial, beatSaberPackageId),
+            readBackupState({ client, serial: device.serial }),
+            client.fileExists(device.serial, questSavedPlayerDataPath),
+            client.packageVersionName(device.serial, encorePackageId)
+         ]);
+
+         if (Result.isOk(gameVersion)) snapshot.gameVersion = gameVersion.value;
+         if (Result.isOk(modloader) && Result.isOk(patched)) snapshot.modloaderInstalled = modloader.value && patched.value;
+         snapshot.gameRunning = Result.isOk(gameRunning) ? gameRunning.value : (previous?.gameRunning ?? false);
+         if (Result.isOk(savedPlayerData)) snapshot.savedPlayerData = savedPlayerData.value;
+         if (Result.isOk(companion)) snapshot.companionInstalled = companion.value !== null;
+         if (Result.isError(backup)) snapshot.recoveryAvailable = previous?.recoveryAvailable ?? false;
+         else if (backup.value.complete && backup.value.apk && !snapshot.modloaderInstalled) {
+            if (snapshot.gameVersion) {
+               snapshot.recoveryAvailable = backup.value.version === snapshot.gameVersion || backup.value.downgradeVersion === snapshot.gameVersion;
+            } else {
+               const installed = await client.packageApkPath(device.serial, beatSaberPackageId);
+               snapshot.recoveryAvailable = Result.isOk(installed) && !installed.value;
+            }
+         }
+         probedAt.set(physicalId, Date.now());
+      }
+
+      return snapshot;
    }
 
    function ensureClient(): Promise<Result<AdbClient, Problem>> {
@@ -249,7 +290,7 @@ export function createQuestDeviceService(options: {
       return Result.gen(async function* () {
          const adb = yield* Result.await(ensureClient());
          yield* Result.await(adb.connect(request.endpoint));
-         await refresh();
+         await triggerRefresh(false);
          return Result.ok({ endpoint: request.endpoint });
       });
    }
@@ -396,6 +437,7 @@ export function createQuestDeviceService(options: {
          if (nextIds.has(physicalId)) continue;
 
          devices.delete(physicalId);
+         probedAt.delete(physicalId);
          emit({ type: 'target-removed', targetId: `${questTargetIdPrefix}${physicalId}` });
       }
 

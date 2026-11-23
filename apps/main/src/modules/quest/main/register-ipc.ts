@@ -53,7 +53,7 @@ export function createQuestIpcModule(devices: QuestDeviceService, headsets: Ques
       pairWireless: async (request) => (await devices.pairWireless(request)).tap(() => headsets.accept()),
       refreshHeadsets: async () => {
          devices.start();
-         await headsets.retry();
+         await headsets.retry(true);
          await devices.refresh();
       },
       forgetHeadset: async ({ targetId }) => (await headsets.forget(targetId)).map(() => null)

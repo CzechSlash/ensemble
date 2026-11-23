@@ -1,6 +1,7 @@
 import { Result } from 'better-result';
 import { z } from 'zod';
 
+import { mapWithConcurrency } from '@/lib/async';
 import type { Problem } from '@/lib/errors';
 import { readJsonFileOrDefault, writeJsonFileAtomic } from '@/lib/filesystem/json';
 import { createSerialQueue } from '@/lib/state/machine';
@@ -26,6 +27,10 @@ const storeSchema = z.object({
 type KnownHeadset = z.infer<typeof knownHeadsetSchema>;
 
 const reconnectIntervalMs = 30_000;
+const maxReconnectBackoffMs = 15 * 60_000;
+const maxReconnectsPerRound = 32;
+const maxManualReconnects = 128;
+const maxConcurrentReconnects = 8;
 const acceptWindowMs = 2 * 60_000;
 const connectionRank = { remote: 3, usb: 2, wifi: 1 };
 
@@ -53,6 +58,7 @@ export function createQuestHeadsets(options: {
    let pluggedIn = new Set<TargetId>();
    let acceptUntil = 0;
    const held = new Set<TargetId>();
+   const reconnectFailures = new Map<TargetId, { count: number; retryAt: number }>();
    const listeners = new Set<(event: TargetEvent) => void>();
    let merged = new Map<TargetId, { target: Target; route: Route | null }>();
    let retrying: Promise<void[]> | null = null;
@@ -161,6 +167,8 @@ export function createQuestHeadsets(options: {
       forgive();
       const next = compute();
       for (const id of held) if (next.get(id)?.target.status === 'ready') held.delete(id);
+      for (const [id, entry] of next) if (entry.route) reconnectFailures.delete(id);
+      for (const id of reconnectFailures.keys()) if (!next.has(id)) reconnectFailures.delete(id);
       const previous = merged;
       merged = next;
       for (const [id, entry] of next) {
@@ -191,17 +199,29 @@ export function createQuestHeadsets(options: {
       update();
    });
 
-   const retry = () => {
+   const retry = (manual = false) => {
       if (isDisposed()) return Promise.resolve([]);
       if (retrying) return retrying;
 
-      const run = Promise.all(
-         known.flatMap((headset) =>
-            headset.endpoint && !held.has(headset.targetId) && merged.get(headset.targetId)?.route === null
-               ? [options.reconnect(headset.endpoint)]
-               : []
-         )
-      ).finally(() => {
+      // headsets that stay offline back off, and each round only tries a few so a big list can't flood adb
+      const now = Date.now();
+      const due = known
+         .filter((headset) => headset.endpoint && !held.has(headset.targetId) && merged.get(headset.targetId)?.route === null)
+         .filter((headset) => manual || (reconnectFailures.get(headset.targetId)?.retryAt ?? 0) <= now)
+         .map((headset, order) => ({ headset, order, failures: reconnectFailures.get(headset.targetId)?.count ?? 0 }))
+         .toSorted((first, second) => first.failures - second.failures || second.order - first.order)
+         .slice(0, manual ? maxManualReconnects : maxReconnectsPerRound);
+
+      const run = mapWithConcurrency(due, maxConcurrentReconnects, async ({ headset }) => {
+         if (isDisposed() || !headset.endpoint) return;
+         await options.reconnect(headset.endpoint);
+         if (merged.get(headset.targetId)?.route) return;
+         const count = (reconnectFailures.get(headset.targetId)?.count ?? 0) + 1;
+         reconnectFailures.set(headset.targetId, {
+            count,
+            retryAt: Date.now() + Math.min(maxReconnectBackoffMs, reconnectIntervalMs * 2 ** count)
+         });
+      }).finally(() => {
          if (retrying === run) retrying = null;
       });
       retrying = run;
