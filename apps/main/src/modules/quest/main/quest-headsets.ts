@@ -10,6 +10,8 @@ import { isQuestTargetId, type Target, type TargetConnection, type TargetEvent, 
 
 import { join } from 'node:path';
 
+const maxHeadsets = 1024;
+
 const knownHeadsetSchema = z.object({
    targetId: z.string().refine(isQuestTargetId),
    name: z.string().min(1).max(200),
@@ -18,8 +20,8 @@ const knownHeadsetSchema = z.object({
    endpoint: z.string().max(300).optional()
 });
 const storeSchema = z.object({
-   known: z.array(knownHeadsetSchema).max(64),
-   forgotten: z.array(z.string().refine(isQuestTargetId)).max(64)
+   known: z.array(knownHeadsetSchema).max(maxHeadsets),
+   forgotten: z.array(z.string().refine(isQuestTargetId)).max(maxHeadsets)
 });
 type KnownHeadset = z.infer<typeof knownHeadsetSchema>;
 
@@ -123,7 +125,7 @@ export function createQuestHeadsets(options: {
             endpoint: endpoint ?? previous?.endpoint
          };
          if (previous && JSON.stringify(previous) === JSON.stringify(record)) continue;
-         known = [...known.filter((headset) => headset.targetId !== target.id), record].slice(-64);
+         known = [...known.filter((headset) => headset.targetId !== target.id), record].slice(-maxHeadsets);
          changed = true;
       }
       if (changed) await save();
@@ -131,7 +133,7 @@ export function createQuestHeadsets(options: {
 
    function save() {
       return writeQueue.run(() =>
-         writeJsonFileAtomic(storePath, { known: [...known], forgotten: [...forgotten] }, storeSchema, { root: options.dataPath })
+         writeJsonFileAtomic(storePath, { known: [...known], forgotten: [...forgotten].slice(-maxHeadsets) }, storeSchema, { root: options.dataPath })
       );
    }
 
