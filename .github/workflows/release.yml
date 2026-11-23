@@ -175,7 +175,7 @@ jobs:
                - name: macOS DMGs
                  os: macos-latest
                  package_args: --mac dmg zip --x64 --arm64
-                 artifact: encore-macos
+                 artifact: ensemble-macos
                  artifact_paths: |
                     apps/main/release/*.dmg
                     apps/main/release/*.zip
@@ -186,7 +186,7 @@ jobs:
                - name: Windows x64 EXE
                  os: windows-latest
                  package_args: --win nsis --x64
-                 artifact: encore-windows-x64
+                 artifact: ensemble-windows-x64
                  artifact_paths: |
                     apps/main/release/*.exe
                     apps/main/release/latest.yml
@@ -196,7 +196,7 @@ jobs:
                - name: Linux x86_64 packages
                  os: ubuntu-latest
                  package_args: --linux AppImage deb rpm --x64
-                 artifact: encore-linux-x86_64
+                 artifact: ensemble-linux-x86_64
                  artifact_paths: |
                     apps/main/release/*.AppImage
                     apps/main/release/*.deb
@@ -208,7 +208,7 @@ jobs:
                - name: Linux arm64 packages
                  os: ubuntu-24.04-arm
                  package_args: --linux AppImage deb rpm --arm64 '-c.appImage.artifactName=${productName}-${version}-linux-arm64.${ext}' '-c.deb.artifactName=${productName}-${version}-linux-arm64.${ext}' '-c.rpm.artifactName=${productName}-${version}-linux-aarch64.${ext}'
-                 artifact: encore-linux-arm64
+                 artifact: ensemble-linux-arm64
                  artifact_paths: |
                     apps/main/release/*.AppImage
                     apps/main/release/*.deb
@@ -221,7 +221,7 @@ jobs:
                - name: Linux x86_64 Flatpak
                  os: ubuntu-latest
                  package_args: --linux flatpak --x64
-                 artifact: encore-linux-flatpak
+                 artifact: ensemble-linux-flatpak
                  artifact_paths: apps/main/release/*.flatpak
                  flatpak: true
                  linux_packages: flatpak flatpak-builder musl-tools xz-utils
@@ -290,33 +290,33 @@ jobs:
                  org.electronjs.Electron2.BaseApp//25.08
 
          - name: Build launch watchdog
-           run: vp exec --filter encore -- node native/watchdog/build.ts
+           run: vp exec --filter ensemble -- node native/watchdog/build.ts
 
          - name: Package app
-           if: matrix.os != 'windows-latest'
+           if: matrix.os != 'windows-latest' || vars.AZURE_CLIENT_ID == ''
            shell: bash
            env:
               APPIMAGE_EXTRACT_AND_RUN: '1'
               RELEASE_VERSION: ${{ needs.version.outputs.version }}
-           run: vp exec --filter encore -- electron-builder ${{ matrix.package_args }} --config.extraMetadata.version="$RELEASE_VERSION" --publish never
+           run: vp exec --filter ensemble -- electron-builder ${{ matrix.package_args }} --config.extraMetadata.version="$RELEASE_VERSION" --publish never
 
          - name: Set up uv
-           if: matrix.artifact == 'encore-linux-arm64'
+           if: matrix.artifact == 'ensemble-linux-arm64'
            uses: astral-sh/setup-uv@1db35dd8eee11c5894872e0b383ae6c406cf738d # v10.4.0
            with:
               enable-cache: false
 
          - name: Build Steam Frame installer
-           if: matrix.artifact == 'encore-linux-arm64'
+           if: matrix.artifact == 'ensemble-linux-arm64'
            env:
               RELEASE_VERSION: ${{ needs.version.outputs.version }}
            run: |
               apps/main/packaging/steam-frame/build.sh \
-                 "apps/main/release/Encore-$RELEASE_VERSION-linux-arm64.AppImage" \
-                 "apps/main/release/Encore-$RELEASE_VERSION-steam-frame.flatpak"
+                 "apps/main/release/Ensemble-$RELEASE_VERSION-linux-arm64.AppImage" \
+                 "apps/main/release/Ensemble-$RELEASE_VERSION-steam-frame.flatpak"
 
          - name: Azure login
-           if: matrix.os == 'windows-latest'
+           if: matrix.os == 'windows-latest' && vars.AZURE_CLIENT_ID != ''
            uses: azure/login@v3
            with:
               client-id: ${{ vars.AZURE_CLIENT_ID }}
@@ -324,7 +324,7 @@ jobs:
               subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
 
          - name: Sign and package Windows app
-           if: matrix.os == 'windows-latest'
+           if: matrix.os == 'windows-latest' && vars.AZURE_CLIENT_ID != ''
            shell: pwsh
            env:
               RELEASE_VERSION: ${{ needs.version.outputs.version }}
@@ -335,15 +335,15 @@ jobs:
                  "--x64"
                  "--config.extraMetadata.version=$env:RELEASE_VERSION"
                  "--config.forceCodeSigning=true"
-                 "--config.win.azureSignOptions.publisherName=STRATHECA PTY LTD"
-                 "--config.win.azureSignOptions.endpoint=https://eus.codesigning.azure.net/"
-                 "--config.win.azureSignOptions.certificateProfileName=encore-release"
-                 "--config.win.azureSignOptions.codeSigningAccountName=strathecasigning"
+                 "--config.win.azureSignOptions.publisherName=${{ vars.AZURE_SIGNING_PUBLISHER }}"
+                 "--config.win.azureSignOptions.endpoint=${{ vars.AZURE_SIGNING_ENDPOINT }}"
+                 "--config.win.azureSignOptions.certificateProfileName=${{ vars.AZURE_SIGNING_PROFILE }}"
+                 "--config.win.azureSignOptions.codeSigningAccountName=${{ vars.AZURE_SIGNING_ACCOUNT }}"
                  "--publish"
                  "never"
               )
 
-              vp exec --filter encore -- electron-builder @arguments
+              vp exec --filter ensemble -- electron-builder @arguments
 
          - name: Upload release asset
            uses: actions/upload-artifact@v6
@@ -354,105 +354,18 @@ jobs:
               retention-days: 7
               compression-level: 0
 
-   quest:
-      name: Build Quest APK
-      needs: version
-      runs-on: ubuntu-24.04
-      permissions:
-         contents: read
-      steps:
-         - name: Checkout
-           uses: actions/checkout@v5
-           with:
-              ref: ${{ needs.version.outputs.sha }}
-
-         - name: Setup Vite+
-           uses: voidzero-dev/setup-vp@v1.17.0
-           with:
-              node-version-file: .node-version
-              cache: true
-              run-install: false
-
-         - name: Set up Java
-           uses: actions/setup-java@v6
-           with:
-              distribution: temurin
-              java-version: '21'
-
-         - name: Install Android SDK packages
-           run: |
-              "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" \
-                 "platforms;android-36" "build-tools;35.0.0" "ndk;27.0.12077973" "cmake;3.22.1"
-
-         - name: Install dependencies
-           run: vp install --frozen-lockfile --ignore-scripts
-
-         - name: Build Quest app
-           shell: bash
-           env:
-              RELEASE_VERSION: ${{ needs.version.outputs.version }}
-           run: |
-              node --input-type=module <<'NODE'
-              import { readFileSync, writeFileSync } from "node:fs";
-
-              const path = "apps/main/package.json";
-              const pkg = JSON.parse(readFileSync(path, "utf8"));
-              pkg.version = process.env.RELEASE_VERSION;
-              writeFileSync(path, JSON.stringify(pkg));
-              NODE
-
-              vp run @encore/daemon#build
-              vp run @encore/mobile#build
-              vp run @encore/mobile#sync android
-              apps/mobile/android/gradlew -p apps/mobile/android --no-daemon :app:assembleRelease \
-                 -PencoreVersionName="$RELEASE_VERSION" -PencoreVersionCode="$GITHUB_RUN_NUMBER"
-
-         - name: Sign Quest APK
-           shell: bash
-           env:
-              RELEASE_VERSION: ${{ needs.version.outputs.version }}
-              ENCORE_ANDROID_KEYSTORE_BASE64: ${{ secrets.ENCORE_ANDROID_KEYSTORE_BASE64 }}
-              ENCORE_ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ENCORE_ANDROID_KEYSTORE_PASSWORD }}
-           run: |
-              if [[ -z "$ENCORE_ANDROID_KEYSTORE_BASE64" || -z "$ENCORE_ANDROID_KEYSTORE_PASSWORD" ]]; then
-                 echo "::error::Set ENCORE_ANDROID_KEYSTORE_BASE64 and ENCORE_ANDROID_KEYSTORE_PASSWORD before releasing."
-                 exit 1
-              fi
-
-              umask 077
-              keystore="$(mktemp "$RUNNER_TEMP/encore-android.XXXXXX")"
-              trap 'rm -f "$keystore"' EXIT
-              printf '%s' "$ENCORE_ANDROID_KEYSTORE_BASE64" | base64 --decode > "$keystore"
-
-              apksigner="$ANDROID_HOME/build-tools/35.0.0/apksigner"
-              mkdir -p release-quest
-              apk="release-quest/Encore-$RELEASE_VERSION-quest.apk"
-              "$apksigner" sign --ks "$keystore" --ks-type PKCS12 --ks-pass env:ENCORE_ANDROID_KEYSTORE_PASSWORD \
-                 --out "$apk" apps/mobile/android/app/build/outputs/apk/release/app-release-unsigned.apk
-              "$apksigner" verify "$apk"
-
-         - name: Upload Quest release asset
-           uses: actions/upload-artifact@v6
-           with:
-              name: encore-quest
-              path: release-quest/*-quest.apk
-              if-no-files-found: error
-              retention-days: 7
-              compression-level: 0
-
    release:
       name: Publish release
       needs:
          - version
          - package
-         - quest
       runs-on: ubuntu-latest
       steps:
          - name: Download release assets
            uses: actions/download-artifact@v7
            with:
               path: artifacts
-              pattern: encore-*
+              pattern: ensemble-*
 
          - name: Create GitHub release
            env:
@@ -477,7 +390,7 @@ jobs:
               gh release create "$TAG" "${assets[@]}" \
                  --repo "$GITHUB_REPOSITORY" \
                  --target "$SHA" \
-                 --title "Encore v$VERSION" \
+                 --title "Ensemble v$VERSION" \
                  --notes-file release-notes.md
 
    finalize:
