@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate, useRouterState } from '@tanstack/react-router';
-import { FolderSymlink, Home, Plus, Server, Settings } from 'lucide-react';
+import { FolderSymlink, Gamepad2, Home, Plus, Server, Settings } from 'lucide-react';
 import { useTranslations } from 'use-intl';
 
 import { AppLink } from '@/components/app-link';
@@ -16,6 +16,8 @@ import { appInfoQueryOptions } from '@/modules/app/renderer/app-queries';
 import { Onboarding } from '@/modules/app/renderer/onboarding';
 import { AddInstallDialog } from '@/modules/downloads/renderer/add-install-dialog';
 import { useVersionDownload, type VersionDownloader } from '@/modules/downloads/renderer/use-version-download';
+import { useConsoleLock } from '@/modules/fleet/renderer/console-lock';
+import { OperatorConsole } from '@/modules/fleet/renderer/operator-console';
 import { ImportInstallDialog } from '@/modules/installs/renderer/import-install-dialog';
 import { useInstallImport, type InstallImporter } from '@/modules/installs/renderer/use-install-import';
 import { MapLinkDialog } from '@/modules/maps/renderer/map-link-dialog';
@@ -48,6 +50,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
    const importer = useInstallImport();
    const [questSetupOpen, setQuestSetupOpen] = useState(false);
    const settings = useSettings();
+   const consoleLock = useConsoleLock();
    const desktop = window.encore.runtime === 'desktop';
    const onboarding = desktop && settings.snapshot?.app.setup === null;
    const location = useRouterState({ select: (state) => state.location });
@@ -63,7 +66,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
    return (
       <>
          {onboarding ? <Onboarding importer={importer} downloader={downloader} /> : null}
-         {onboarding || (desktop && settings.loadStatus === 'loading') ? null : (
+         {onboarding || (desktop && settings.loadStatus === 'loading') ? null : consoleLock.locked ? (
+            // locked: only the operator console is reachable until the PIN is entered
+            <div className="bg-background text-foreground flex h-dvh flex-col">
+               {desktop ? <header className="window-title-bar bg-background h-8 shrink-0" /> : null}
+               <main className="flex min-h-0 flex-1 flex-col">
+                  <OperatorConsole />
+               </main>
+            </div>
+         ) : (
             <div
                className={cn(
                   'bg-background text-foreground h-dvh',
@@ -124,6 +135,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                                     <span className="hidden truncate sm:block">{t('fleet')}</span>
                                  </SidebarLink>
                               ) : null}
+                              {targetList.targets.length > 1 ? (
+                                 <SidebarLink to="/console" isActive={pathname === '/console'}>
+                                    <Gamepad2 className="size-4 shrink-0" />
+                                    <span className="hidden truncate sm:block">{t('console')}</span>
+                                 </SidebarLink>
+                              ) : null}
                               {showSharedContent ? (
                                  <SidebarLink to="/shared" isActive={pathname === '/shared'}>
                                     <FolderSymlink className="size-4 shrink-0" />
@@ -169,7 +186,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
    );
 }
 
-function SidebarLink({ to, isActive, children }: { to: '/' | '/fleet' | '/shared' | '/settings'; isActive?: boolean; children: React.ReactNode }) {
+function SidebarLink({
+   to,
+   isActive,
+   children
+}: {
+   to: '/' | '/fleet' | '/console' | '/shared' | '/settings';
+   isActive?: boolean;
+   children: React.ReactNode;
+}) {
    return (
       <AppLink to={to} aria-current={isActive ? 'page' : undefined} className={cn(sidebarItemClassName, isActive && activeSidebarItemClassName)}>
          {children}

@@ -112,7 +112,7 @@ function FleetRoute() {
                      names={names}
                      busy={bulk.busy}
                      failedCount={bulk.failedIds.length}
-                     onRetry={() => void bulk.run(results.action, bulk.failedIds, bulk.referenceId)}
+                     onRetry={() => void bulk.run(results.action, bulk.failedIds, bulk.referenceId, bulk.version)}
                      onDismiss={bulk.dismiss}
                   />
                ) : null}

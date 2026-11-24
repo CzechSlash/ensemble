@@ -69,7 +69,8 @@
       "fleet": "Fleet",
       "shared": "Shared content",
       "label": "Main",
-      "settings": "Settings"
+      "settings": "Settings",
+      "console": "Console"
    },
    "fleet": {
       "title": "Fleet",
@@ -115,7 +116,8 @@
          "patch": "Patch results",
          "unmod": "Unpatch results",
          "mods": "Mod match results",
-         "maps": "Map push results"
+         "maps": "Map push results",
+         "restart": "Restart results"
       },
       "running": "Working",
       "done": "Done",
@@ -2929,5 +2931,54 @@
       "unreadable": "This folder couldn't be read",
       "empty": "Nothing here",
       "truncated": "Showing the first {count} items"
+   },
+   "console": {
+      "title": "Operator console",
+      "scope": "Devices",
+      "scopeAll": "All devices",
+      "summary": "{ready} ready · {notReady} not ready",
+      "launchAll": "Launch all",
+      "stopAll": "Stop all",
+      "restartAll": "Restart all",
+      "launch": "Launch",
+      "restart": "Restart",
+      "empty": "No devices in this scope",
+      "more": "{count, plural, one {# more device} other {# more devices}}. Pick a tag to narrow the list",
+      "confirm": {
+         "stop": {
+            "title": "Stop all devices?",
+            "description": "The game closes on {count, plural, one {# device} other {# devices}}. Anyone mid-song loses their run",
+            "confirm": "Stop"
+         },
+         "restart": {
+            "title": "Restart all devices?",
+            "description": "The game closes and starts again on {count, plural, one {# device} other {# devices}}. Anyone mid-song loses their run",
+            "confirm": "Restart"
+         }
+      },
+      "lock": {
+         "action": "Lock",
+         "setPin": "Set PIN",
+         "unlock": "Unlock",
+         "removePin": "Remove PIN",
+         "locked": "Locked"
+      },
+      "pin": {
+         "setTitle": "Set a PIN",
+         "setDescription": "Locking hides everything except this console until the PIN is entered. It keeps volunteers out of the other pages, but it isn’t a security boundary",
+         "enterTitle": "Enter PIN",
+         "enterDescription": "Enter the PIN to leave the operator console",
+         "removeTitle": "Remove the PIN",
+         "removeDescription": "Enter the current PIN to turn the lock off",
+         "label": "PIN",
+         "hint": "4 to 8 digits",
+         "wrong": "That PIN is wrong",
+         "confirm": "Confirm"
+      },
+      "version": "Beat Saber version",
+      "versionAny": "First install on each device",
+      "versionMissing": "Beat Saber {version} is not installed",
+      "missingBadge": "No {version}",
+      "missingSummary": "{count, plural, one {# device does not have} other {# devices do not have}} {version}"
    }
 }
