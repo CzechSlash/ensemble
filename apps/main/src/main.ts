@@ -24,6 +24,8 @@ import { downloadsApi } from '@/modules/downloads/api';
 import { createLocalDownloads } from '@/modules/downloads/main/local-downloads';
 import { filesApi } from '@/modules/files/api';
 import { createFileBrowser } from '@/modules/files/main/file-browser';
+import { createFleetTags } from '@/modules/fleet/main/fleet-tags';
+import { createFleetIpcModule } from '@/modules/fleet/main/register-ipc';
 import { installMirrorApi } from '@/modules/install-mirror/api';
 import { createMirrorService, mirrorRemoteFrom } from '@/modules/install-mirror/main/mirror-service';
 import { beatSaberAppDataPath, createMirrorSource } from '@/modules/install-mirror/main/mirror-source';
@@ -502,6 +504,7 @@ function composeEncore(log: AppLogWriter) {
       createSettingsIpcModule(settingsStore),
       createReceiverIpcModule(receiver, remoteReceiver, broadcastIpcEvent),
       createTargetsIpcModule(targetRegistry, broadcastIpcEvent),
+      createFleetIpcModule(createFleetTags({ dataPath }), mapSync),
       createQuestIpcModule(questDevices, questHeadsets, broadcastIpcEvent, secretStore),
       createInstallsIpcModule(installRegistry),
       createMapsIpcModule(mapService, broadcastIpcEvent),

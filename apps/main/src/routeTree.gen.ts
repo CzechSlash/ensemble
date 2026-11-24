@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root';
 import { Route as SharedRouteImport } from './routes/shared';
 import { Route as SettingsRouteImport } from './routes/settings';
+import { Route as FleetRouteImport } from './routes/fleet';
 import { Route as IndexRouteImport } from './routes/index';
 import { Route as SettingsRemoteRouteImport } from './routes/settings.remote';
 import { Route as SettingsQuestRouteImport } from './routes/settings.quest';
@@ -29,6 +30,11 @@ const SharedRoute = SharedRouteImport.update({
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any);
+const FleetRoute = FleetRouteImport.update({
+  id: '/fleet',
+  path: '/fleet',
   getParentRoute: () => rootRouteImport,
 } as any);
 const IndexRoute = IndexRouteImport.update({
@@ -79,6 +85,7 @@ const InstallsInstallIdRoute = InstallsInstallIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute;
+  '/fleet': typeof FleetRoute;
   '/settings': typeof SettingsRouteWithChildren;
   '/shared': typeof SharedRoute;
   '/installs/$installId': typeof InstallsInstallIdRoute;
@@ -92,6 +99,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute;
+  '/fleet': typeof FleetRoute;
   '/settings': typeof SettingsRouteWithChildren;
   '/shared': typeof SharedRoute;
   '/installs/$installId': typeof InstallsInstallIdRoute;
@@ -106,6 +114,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport;
   '/': typeof IndexRoute;
+  '/fleet': typeof FleetRoute;
   '/settings': typeof SettingsRouteWithChildren;
   '/shared': typeof SharedRoute;
   '/installs_/$installId': typeof InstallsInstallIdRoute;
@@ -121,6 +130,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath;
   fullPaths:
     | '/'
+    | '/fleet'
     | '/settings'
     | '/shared'
     | '/installs/$installId'
@@ -134,6 +144,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo;
   to:
     | '/'
+    | '/fleet'
     | '/settings'
     | '/shared'
     | '/installs/$installId'
@@ -147,6 +158,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/fleet'
     | '/settings'
     | '/shared'
     | '/installs_/$installId'
@@ -161,6 +173,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute;
+  FleetRoute: typeof FleetRoute;
   SettingsRoute: typeof SettingsRouteWithChildren;
   SharedRoute: typeof SharedRoute;
   InstallsInstallIdRoute: typeof InstallsInstallIdRoute;
@@ -180,6 +193,13 @@ declare module '@tanstack/react-router' {
       path: '/settings';
       fullPath: '/settings';
       preLoaderRoute: typeof SettingsRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    '/fleet': {
+      id: '/fleet';
+      path: '/fleet';
+      fullPath: '/fleet';
+      preLoaderRoute: typeof FleetRouteImport;
       parentRoute: typeof rootRouteImport;
     };
     '/': {
@@ -274,6 +294,7 @@ const SettingsRouteWithChildren = SettingsRoute._addFileChildren(
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  FleetRoute: FleetRoute,
   SettingsRoute: SettingsRouteWithChildren,
   SharedRoute: SharedRoute,
   InstallsInstallIdRoute: InstallsInstallIdRoute,

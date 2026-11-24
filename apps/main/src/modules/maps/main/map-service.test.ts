@@ -102,6 +102,11 @@ test('syncs one copy of each map both ways between two installs through the targ
    expect(await titles(first.id)).toEqual(['Reality Check', 'Reality Check', 'Second Song']);
    expect(await titles(second.id)).toEqual(['Reality Check', 'Second Song']);
    expect(await sync.preview(request)).toEqual({ toFirst: 0, toSecond: 0, problem: null, runsOn: null });
+
+   await writeMap(customLevelsPath(second.path), 'Only Here');
+   const pushed = (await sync.push(request)).unwrap();
+   expect(await waitForOperation(operations, pushed.operation.id)).toMatchObject({ status: 'completed', result: { mapCount: 0 } });
+   expect(await titles(first.id)).not.toContain('Only Here');
 });
 
 test('a map deleted through one install leaves the list of another install sharing its folder', async () => {

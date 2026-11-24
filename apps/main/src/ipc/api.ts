@@ -9,6 +9,7 @@ import type {
 } from '@/ipc/core';
 import { createDomainIpcDescriptors } from '@/ipc/target-api';
 import { appIpc } from '@/modules/app/ipc';
+import { fleetIpc } from '@/modules/fleet/ipc';
 import { installsIpc } from '@/modules/installs/ipc';
 import { mapsIpc } from '@/modules/maps/ipc';
 import { modelsIpc } from '@/modules/models/ipc';
@@ -51,6 +52,7 @@ export const ipcDescriptors = createDomainIpcDescriptors(targetApis, {
    mods: modsIpc,
    shortcuts: shortcutsIpc,
    support: supportIpc,
+   fleet: fleetIpc,
    quest: questIpc,
    questLocal: questLocalIpc
 });

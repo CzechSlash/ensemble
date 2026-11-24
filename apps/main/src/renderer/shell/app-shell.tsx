@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate, useRouterState } from '@tanstack/react-router';
-import { FolderSymlink, Home, Plus, Settings } from 'lucide-react';
+import { FolderSymlink, Home, Plus, Server, Settings } from 'lucide-react';
 import { useTranslations } from 'use-intl';
 
 import { AppLink } from '@/components/app-link';
@@ -118,6 +118,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                                  <Home className="size-4 shrink-0" />
                                  <span className="hidden truncate sm:block">{t('home')}</span>
                               </SidebarLink>
+                              {targetList.targets.length > 1 ? (
+                                 <SidebarLink to="/fleet" isActive={pathname === '/fleet'}>
+                                    <Server className="size-4 shrink-0" />
+                                    <span className="hidden truncate sm:block">{t('fleet')}</span>
+                                 </SidebarLink>
+                              ) : null}
                               {showSharedContent ? (
                                  <SidebarLink to="/shared" isActive={pathname === '/shared'}>
                                     <FolderSymlink className="size-4 shrink-0" />
@@ -163,7 +169,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
    );
 }
 
-function SidebarLink({ to, isActive, children }: { to: '/' | '/shared' | '/settings'; isActive?: boolean; children: React.ReactNode }) {
+function SidebarLink({ to, isActive, children }: { to: '/' | '/fleet' | '/shared' | '/settings'; isActive?: boolean; children: React.ReactNode }) {
    return (
       <AppLink to={to} aria-current={isActive ? 'page' : undefined} className={cn(sidebarItemClassName, isActive && activeSidebarItemClassName)}>
          {children}

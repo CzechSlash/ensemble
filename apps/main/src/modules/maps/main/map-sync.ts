@@ -14,6 +14,8 @@ import { join } from 'node:path';
 
 type Transfer = { map: LocalMapSummary; from: MapSyncSide; to: MapSyncSide };
 
+export type MapSyncService = ReturnType<typeof createMapSyncService>;
+
 export function createMapSyncService(options: {
    registry: Pick<TargetRegistry, 'callTarget' | 'downloadTarget' | 'hostOf' | 'uploadTarget'>;
    operations: OperationRegistry;
@@ -83,6 +85,14 @@ export function createMapSyncService(options: {
       }
 
       return (await plan(request)).map((transfers) => ({ targetId: localTargetId, operation: startTransfers(transfers) }));
+   }
+
+   // one-way: copies what the reference has and the target lacks, and never touches the reference
+   async function push(request: MapSyncRequest): Promise<Result<MapSyncStarted, Problem>> {
+      return (await plan(request)).map((transfers) => ({
+         targetId: localTargetId,
+         operation: startTransfers(transfers.filter((transfer) => transfer.to === request.second))
+      }));
    }
 
    function startTransfers(transfers: Transfer[]) {
@@ -183,5 +193,5 @@ export function createMapSyncService(options: {
       return Result.ok(downloaded.value.sizeBytes);
    }
 
-   return { preview, start };
+   return { preview, start, push };
 }

@@ -66,9 +66,162 @@
    "nav": {
       "add": "Add Beat Saber",
       "home": "Home",
+      "fleet": "Fleet",
       "shared": "Shared content",
       "label": "Main",
       "settings": "Settings"
+   },
+   "fleet": {
+      "title": "Fleet",
+      "loading": "Loading devices",
+      "loadError": "Couldn't load devices",
+      "empty": "No devices yet. Pair a headset or add a remote to see it here",
+      "noMatches": "No devices match",
+      "filter": "Search, or filter like station:\"Station 1\" tag:Public status:ready",
+      "refresh": "Refresh devices",
+      "summary": "{visible} of {total}",
+      "selected": "{count} selected",
+      "clearSelection": "Clear",
+      "selectAll": "Select all devices",
+      "selectOne": "Select {name}",
+      "columns": {
+         "name": "Name",
+         "kind": "Type",
+         "connection": "Connection",
+         "status": "Status",
+         "version": "Beat Saber",
+         "modded": "Mods",
+         "tags": "Tags"
+      },
+      "kind": {
+         "this-pc": "This PC",
+         "pc": "PC",
+         "quest": "Quest"
+      },
+      "connection": {
+         "usb": "USB",
+         "wifi": "Wi-Fi",
+         "remote": "Remote"
+      },
+      "modded": {
+         "yes": "Modded",
+         "no": "Stock"
+      },
+      "retryFailed": "Retry failed",
+      "dismiss": "Dismiss",
+      "resultsTitle": {
+         "launch": "Launch results",
+         "stop": "Stop results",
+         "patch": "Patch results",
+         "unmod": "Unpatch results",
+         "mods": "Mod match results",
+         "maps": "Map push results"
+      },
+      "running": "Working",
+      "done": "Done",
+      "summaryResult": "{ok} succeeded, {failed} failed",
+      "tagName": "Tag",
+      "facets": {
+         "title": "Filter devices by",
+         "station": "Station",
+         "tag": "Tag",
+         "version": "Version",
+         "status": "Status",
+         "kind": "Type",
+         "none": {
+            "station": "Direct",
+            "tag": "No tag",
+            "version": "Unknown",
+            "status": "Unknown",
+            "kind": "Unknown"
+         },
+         "all": {
+            "station": "All stations",
+            "tag": "All tags",
+            "version": "All versions",
+            "status": "All statuses",
+            "kind": "All types"
+         }
+      },
+      "allDevices": "All devices",
+      "mapLegend": {
+         "ready": "Ready",
+         "unpaired": "Unpaired",
+         "disconnected": "Offline",
+         "incompatible": "Incompatible"
+      },
+      "launch": "Launch",
+      "stop": "Stop",
+      "menu": {
+         "headsets": "Quest headsets",
+         "patch": "Patch",
+         "unmod": "Unpatch…",
+         "content": "Content",
+         "matchMods": "Match mods…",
+         "pushMaps": "Push maps…",
+         "tags": "Tags",
+         "addTag": "Add tag…",
+         "removeTag": "Remove tag…"
+      },
+      "dialog": {
+         "start": "Start",
+         "reference": "Reference device",
+         "referencePlaceholder": "Choose a device",
+         "mods": {
+            "title": "Match mods",
+            "description": "Install the mods a reference device has on {count, plural, one {# device} other {# devices}}. Mods a device already has are left alone"
+         },
+         "maps": {
+            "title": "Push maps",
+            "description": "Copy maps from a reference device to {count, plural, one {# device} other {# devices}}. Maps they already have are skipped, and the reference is never changed"
+         },
+         "addTag": {
+            "title": "Add tag",
+            "description": "Tag {count, plural, one {# device} other {# devices}}",
+            "confirm": "Add"
+         },
+         "removeTag": {
+            "title": "Remove tag",
+            "description": "Remove a tag from {count, plural, one {# device} other {# devices}}",
+            "confirm": "Remove"
+         },
+         "unmod": {
+            "title": "Unpatch headsets",
+            "description": "Return {count, plural, one {# headset} other {# headsets}} to stock Beat Saber? Mods are removed from each one",
+            "confirm": "Unpatch"
+         }
+      },
+      "views": {
+         "title": "Saved views",
+         "empty": "No saved views",
+         "saveCurrent": "Save current view…",
+         "delete": "Delete “{name}”",
+         "saveTitle": "Save view",
+         "saveDescription": "Keep the current search and filters so you can come back to them",
+         "name": "Name",
+         "save": "Save"
+      },
+      "selectCount": "{count, plural, one {# device} other {# devices}}",
+      "filterMultiple": "{name}: several",
+      "detail": {
+         "empty": {
+            "title": "Select a device",
+            "description": "Pick a device in the list to see its details and run actions on it"
+         }
+      },
+      "selection": {
+         "title": "{count, plural, one {# device selected} other {# devices selected}}",
+         "none": "No devices selected",
+         "hint": "Tick devices in the list, or pick a whole group below",
+         "summary": "{ready} ready, {quests} headsets",
+         "offline": "{count} not ready",
+         "byGroup": "Select by group",
+         "pickGroup": "Select {name}",
+         "devices": "Selected devices",
+         "remove": "Deselect {name}",
+         "more": "and {count} more"
+      },
+      "groupBy": "Group by"
    },
    "targets": {
       "status": {
