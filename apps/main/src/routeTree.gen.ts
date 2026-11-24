@@ -13,6 +13,7 @@ import { Route as SharedRouteImport } from './routes/shared';
 import { Route as SettingsRouteImport } from './routes/settings';
 import { Route as FleetRouteImport } from './routes/fleet';
 import { Route as ConsoleRouteImport } from './routes/console';
+import { Route as ComplianceRouteImport } from './routes/compliance';
 import { Route as IndexRouteImport } from './routes/index';
 import { Route as SettingsRemoteRouteImport } from './routes/settings.remote';
 import { Route as SettingsQuestRouteImport } from './routes/settings.quest';
@@ -41,6 +42,11 @@ const FleetRoute = FleetRouteImport.update({
 const ConsoleRoute = ConsoleRouteImport.update({
   id: '/console',
   path: '/console',
+  getParentRoute: () => rootRouteImport,
+} as any);
+const ComplianceRoute = ComplianceRouteImport.update({
+  id: '/compliance',
+  path: '/compliance',
   getParentRoute: () => rootRouteImport,
 } as any);
 const IndexRoute = IndexRouteImport.update({
@@ -91,6 +97,7 @@ const InstallsInstallIdRoute = InstallsInstallIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute;
+  '/compliance': typeof ComplianceRoute;
   '/console': typeof ConsoleRoute;
   '/fleet': typeof FleetRoute;
   '/settings': typeof SettingsRouteWithChildren;
@@ -106,6 +113,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute;
+  '/compliance': typeof ComplianceRoute;
   '/console': typeof ConsoleRoute;
   '/fleet': typeof FleetRoute;
   '/settings': typeof SettingsRouteWithChildren;
@@ -122,6 +130,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport;
   '/': typeof IndexRoute;
+  '/compliance': typeof ComplianceRoute;
   '/console': typeof ConsoleRoute;
   '/fleet': typeof FleetRoute;
   '/settings': typeof SettingsRouteWithChildren;
@@ -139,6 +148,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath;
   fullPaths:
     | '/'
+    | '/compliance'
     | '/console'
     | '/fleet'
     | '/settings'
@@ -154,6 +164,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo;
   to:
     | '/'
+    | '/compliance'
     | '/console'
     | '/fleet'
     | '/settings'
@@ -169,6 +180,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/compliance'
     | '/console'
     | '/fleet'
     | '/settings'
@@ -185,6 +197,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute;
+  ComplianceRoute: typeof ComplianceRoute;
   ConsoleRoute: typeof ConsoleRoute;
   FleetRoute: typeof FleetRoute;
   SettingsRoute: typeof SettingsRouteWithChildren;
@@ -220,6 +233,13 @@ declare module '@tanstack/react-router' {
       path: '/console';
       fullPath: '/console';
       preLoaderRoute: typeof ConsoleRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    '/compliance': {
+      id: '/compliance';
+      path: '/compliance';
+      fullPath: '/compliance';
+      preLoaderRoute: typeof ComplianceRouteImport;
       parentRoute: typeof rootRouteImport;
     };
     '/': {
@@ -314,6 +334,7 @@ const SettingsRouteWithChildren = SettingsRoute._addFileChildren(
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ComplianceRoute: ComplianceRoute,
   ConsoleRoute: ConsoleRoute,
   FleetRoute: FleetRoute,
   SettingsRoute: SettingsRouteWithChildren,

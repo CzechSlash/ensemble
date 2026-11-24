@@ -70,7 +70,8 @@
       "shared": "Shared content",
       "label": "Main",
       "settings": "Settings",
-      "console": "Console"
+      "console": "Console",
+      "compliance": "Compliance"
    },
    "fleet": {
       "title": "Fleet",
@@ -2980,5 +2981,21 @@
       "versionMissing": "Beat Saber {version} is not installed",
       "missingBadge": "No {version}",
       "missingSummary": "{count, plural, one {# device does not have} other {# devices do not have}} {version}"
+   },
+   "compliance": {
+      "title": "Compliance",
+      "hint": "Every device must match the reference",
+      "reference": "Reference device",
+      "referencePlaceholder": "Pick a reference device",
+      "scope": "Devices",
+      "scopeAll": "All devices",
+      "run": "Run check",
+      "summary": "{passed} passed · {failed} failed · {errored} couldn’t be read",
+      "copy": "Copy report",
+      "copied": "Copied",
+      "referenceBadge": "Reference",
+      "noDevices": "No ready devices with Beat Saber installed",
+      "pickReference": "Pick the device whose Beat Saber version and mods every other device must match",
+      "ready": "Run the check to compare every device with the reference"
    }
 }

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate, useRouterState } from '@tanstack/react-router';
-import { FolderSymlink, Gamepad2, Home, Plus, Server, Settings } from 'lucide-react';
+import { FolderSymlink, Gamepad2, Home, Plus, Server, Settings, ShieldCheck } from 'lucide-react';
 import { useTranslations } from 'use-intl';
 
 import { AppLink } from '@/components/app-link';
@@ -141,6 +141,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                                     <span className="hidden truncate sm:block">{t('console')}</span>
                                  </SidebarLink>
                               ) : null}
+                              {targetList.targets.length > 1 ? (
+                                 <SidebarLink to="/compliance" isActive={pathname === '/compliance'}>
+                                    <ShieldCheck className="size-4 shrink-0" />
+                                    <span className="hidden truncate sm:block">{t('compliance')}</span>
+                                 </SidebarLink>
+                              ) : null}
                               {showSharedContent ? (
                                  <SidebarLink to="/shared" isActive={pathname === '/shared'}>
                                     <FolderSymlink className="size-4 shrink-0" />
@@ -191,7 +197,7 @@ function SidebarLink({
    isActive,
    children
 }: {
-   to: '/' | '/fleet' | '/console' | '/shared' | '/settings';
+   to: '/' | '/fleet' | '/console' | '/compliance' | '/shared' | '/settings';
    isActive?: boolean;
    children: React.ReactNode;
 }) {
